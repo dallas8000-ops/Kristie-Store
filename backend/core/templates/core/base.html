@@ -33,12 +33,12 @@
                             </form>
                         {% else %}
                             <a class="btn btn-sm btn-outline-light" href="{% url 'login' %}">Sign In</a>
-                            <a class="btn btn-sm btn-light" href="{% url 'signup' %}">Create Account</a>
+                            <a class="btn btn-sm btn-light" href="{% url 'signup' %}">Sign Up</a>
                         {% endif %}
                         {% if request.user.is_authenticated and request.user.is_staff %}
-                            <a class="btn btn-sm btn-warning" href="/admin/">Admin Panel</a>
+                            <a class="btn btn-sm btn-warning" href="/admin/">Admin</a>
                         {% else %}
-                            <a class="btn btn-sm btn-outline-light" href="/admin/login/?next=/admin/">Admin Sign In</a>
+                            <a class="btn btn-sm btn-outline-light" href="/admin/login/?next=/admin/">Admin</a>
                         {% endif %}
                         <button id="modeToggle" class="btn btn-sm btn-outline-light" type="button" aria-label="Toggle dark mode">Dark</button>
                         <select id="themePicker" class="form-select form-select-sm theme-picker" aria-label="Theme selection">
