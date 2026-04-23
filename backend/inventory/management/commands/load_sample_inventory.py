@@ -56,7 +56,7 @@ class Command(BaseCommand):
             _, created = Product.objects.update_or_create(
                 name=product_name,
                 defaults={
-                    'description': 'Auto-created from uploaded catalog image.',
+                    'description': '',
                     'price': price,
                     'old_price': old_price,
                     'category': cat,

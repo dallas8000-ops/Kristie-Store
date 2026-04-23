@@ -109,6 +109,91 @@ def _display_name_from_stem(stem):
     return ' '.join(part.capitalize() for part in text.split())
 
 
+def _catalog_fallback_description(product):
+    name = (product.name or '').lower()
+
+    color_keywords = {
+        'black': 'black',
+        'white': 'white',
+        'ivory': 'ivory',
+        'cream': 'cream',
+        'navy': 'navy',
+        'blue': 'blue',
+        'teal': 'teal',
+        'green': 'green',
+        'emerald': 'emerald',
+        'olive': 'olive',
+        'purple': 'purple',
+        'violet': 'violet',
+        'lilac': 'lilac',
+        'pink': 'pink',
+        'blush': 'blush',
+        'magenta': 'magenta',
+        'fuchsia': 'fuchsia',
+        'peach': 'peach',
+        'yellow': 'yellow',
+        'lemon': 'lemon',
+        'mustard': 'mustard',
+        'gold': 'gold',
+        'orange': 'orange',
+        'tan': 'tan',
+        'camel': 'camel',
+        'oatmeal': 'oatmeal',
+        'grey': 'grey',
+        'gray': 'gray',
+        'burgundy': 'burgundy',
+        'maroon': 'maroon',
+        'red': 'red',
+        'scarlet': 'scarlet',
+        'rust': 'rust',
+    }
+
+    type_keywords = {
+        'pantsuit': 'pantsuit',
+        'suit': 'suit set',
+        'blazer': 'blazer set',
+        'waistcoat': 'waistcoat set',
+        'dress': 'dress',
+        'midi': 'midi dress',
+        'mini': 'mini dress',
+        'maxi': 'maxi dress',
+        'gown': 'gown',
+        'cocktail': 'cocktail look',
+        'sheath': 'sheath silhouette',
+        'wrap': 'wrap silhouette',
+        'skirt': 'skirt set',
+        'office': 'office-ready outfit',
+    }
+
+    vibe_phrases = [
+        'made for polished daytime styling.',
+        'ideal for elevated work-to-evening wear.',
+        'crafted for confident, modern dressing.',
+        'designed to stand out at special occasions.',
+        'built for comfort with a refined finish.',
+        'tailored for effortless, versatile outfits.',
+    ]
+
+    color = ''
+    for keyword, label in color_keywords.items():
+        if keyword in name:
+            color = label
+            break
+
+    item_type = 'fashion piece'
+    for keyword, label in type_keywords.items():
+        if keyword in name:
+            item_type = label
+            break
+
+    key = f'{product.name}:{product.id}'
+    vibe = vibe_phrases[sum(ord(char) for char in key) % len(vibe_phrases)]
+
+    if color:
+        return f'A {color} {item_type} {vibe}'
+    return f'A {item_type} {vibe}'
+
+
 def _recent_images(limit=3):
     return _catalog_image_files()[:limit]
 
@@ -150,7 +235,8 @@ def _format_money(amount, currency):
 def _fetch_live_rates():
     url = 'https://api.frankfurter.app/latest?from=USD&to=EUR,KES,UGX'
     try:
-        with urllib.request.urlopen(url, timeout=4) as response:
+        # Increase timeout to 8 seconds for production environments
+        with urllib.request.urlopen(url, timeout=8) as response:
             payload = json.loads(response.read().decode('utf-8'))
         rates = {
             'USD': Decimal('1'),
@@ -159,7 +245,10 @@ def _fetch_live_rates():
             'UGX': _safe_decimal(payload.get('rates', {}).get('UGX'), FALLBACK_RATES['UGX']),
         }
         return rates, payload.get('date', ''), 'live'
-    except Exception:
+    except Exception as e:
+        # Log the error for debugging, but always fall back gracefully
+        import sys
+        print(f'Warning: Failed to fetch live exchange rates: {e}', file=sys.stderr)
         return FALLBACK_RATES, '', 'fallback'
 
 
@@ -285,10 +374,13 @@ def catalog(request):
 
         primary_image = images[0]
         detail_image = images[1] if len(images) > 1 else primary_image
+        description = (product.description or '').strip()
+        if description.lower() == 'auto-created from uploaded catalog image.':
+            description = ''
 
         catalog_items.append({
             'name': product.name,
-            'description': (product.description or '').strip() or 'Premium tailored fashion for confident everyday wear.',
+            'description': description or _catalog_fallback_description(product),
             'price': product.price,
             'primary_url': primary_image.image.url,
             'detail_url': detail_image.image.url,
@@ -314,30 +406,49 @@ def catalog_image(_request, image_name):
 
 
 def inventory(request):
-    checkout = _checkout_preferences(request)
-    products = Product.objects.prefetch_related(
-        Prefetch('images', queryset=ProductImage.objects.all())
-    ).all()
+    try:
+        checkout = _checkout_preferences(request)
+        products = Product.objects.prefetch_related(
+            Prefetch('images', queryset=ProductImage.objects.all())
+        ).all()
 
-    inventory_items = []
-    for product in products:
-        base_price = _safe_decimal(product.price, Decimal('0'))
-        converted_price = base_price * checkout['rate']
-        inventory_items.append({
-            'product': product,
-            'price_display': _format_money(converted_price, checkout['currency']),
+        inventory_items = []
+        for product in products:
+            base_price = _safe_decimal(product.price, Decimal('0'))
+            converted_price = base_price * checkout['rate']
+            inventory_items.append({
+                'product': product,
+                'price_display': _format_money(converted_price, checkout['currency']),
+            })
+
+        return render(request, 'core/inventory.html', {
+            'inventory_items': inventory_items,
+            'currency': checkout['currency'],
+            'supported_currencies': SUPPORTED_CURRENCIES,
+            'payment_method': checkout['payment_method'],
+            'payment_methods': PAYMENT_METHODS,
+            'rates_source': checkout['rates_source'],
+            'rates_updated': checkout['rates_updated'],
+            'rate_display': _format_money(checkout['rate'], checkout['currency']),
         })
-
-    return render(request, 'core/inventory.html', {
-        'inventory_items': inventory_items,
-        'currency': checkout['currency'],
-        'supported_currencies': SUPPORTED_CURRENCIES,
-        'payment_method': checkout['payment_method'],
-        'payment_methods': PAYMENT_METHODS,
-        'rates_source': checkout['rates_source'],
-        'rates_updated': checkout['rates_updated'],
-        'rate_display': _format_money(checkout['rate'], checkout['currency']),
-    })
+    except Exception as e:
+        import sys
+        print(f'Error loading inventory: {e}', file=sys.stderr)
+        # Fall back to basic inventory view with default currency
+        products = Product.objects.prefetch_related(
+            Prefetch('images', queryset=ProductImage.objects.all())
+        ).all()
+        inventory_items = [{'product': p, 'price_display': str(p.price)} for p in products]
+        return render(request, 'core/inventory.html', {
+            'inventory_items': inventory_items,
+            'currency': 'USD',
+            'supported_currencies': SUPPORTED_CURRENCIES,
+            'payment_method': 'mtn',
+            'payment_methods': PAYMENT_METHODS,
+            'rates_source': 'fallback',
+            'rates_updated': '',
+            'rate_display': '1.00',
+        })
 
 
 @csrf_exempt
@@ -360,39 +471,74 @@ def add_to_cart(request, product_id):
 
 
 def cart(request):
-    checkout = _checkout_preferences(request)
-    cart = _current_cart(request, create=False)
-    items = []
-    items_view = []
-    grand_total = Decimal('0')
+    try:
+        checkout = _checkout_preferences(request)
+        cart = _current_cart(request, create=False)
+        items = []
+        items_view = []
+        grand_total = Decimal('0')
 
-    if cart:
-        items = cart.items.select_related('product')
+        if cart:
+            items = cart.items.select_related('product')
 
-    for item in items:
-        base_price = _safe_decimal(item.product.price, Decimal('0'))
-        line_total_base = base_price * item.quantity
-        line_total = line_total_base * checkout['rate']
-        grand_total += line_total
-        items_view.append({
-            'item': item,
-            'price_display': _format_money(base_price * checkout['rate'], checkout['currency']),
-            'line_total_display': _format_money(line_total, checkout['currency']),
+        for item in items:
+            base_price = _safe_decimal(item.product.price, Decimal('0'))
+            line_total_base = base_price * item.quantity
+            line_total = line_total_base * checkout['rate']
+            grand_total += line_total
+            items_view.append({
+                'item': item,
+                'price_display': _format_money(base_price * checkout['rate'], checkout['currency']),
+                'line_total_display': _format_money(line_total, checkout['currency']),
+            })
+
+        return render(request, 'core/cart.html', {
+            'cart': cart,
+            'items': items,
+            'items_view': items_view,
+            'currency': checkout['currency'],
+            'supported_currencies': SUPPORTED_CURRENCIES,
+            'payment_method': checkout['payment_method'],
+            'payment_methods': PAYMENT_METHODS,
+            'grand_total_display': _format_money(grand_total, checkout['currency']),
+            'rates_source': checkout['rates_source'],
+            'rates_updated': checkout['rates_updated'],
+            'rate_display': _format_money(checkout['rate'], checkout['currency']),
         })
+    except Exception as e:
+        import sys
+        print(f'Error loading cart: {e}', file=sys.stderr)
+        # Fall back to basic cart view with default currency
+        cart = _current_cart(request, create=False)
+        items = []
+        items_view = []
+        grand_total = Decimal('0')
+        
+        if cart:
+            items = cart.items.select_related('product')
+            for item in items:
+                base_price = _safe_decimal(item.product.price, Decimal('0'))
+                line_total = base_price * item.quantity
+                grand_total += line_total
+                items_view.append({
+                    'item': item,
+                    'price_display': str(base_price),
+                    'line_total_display': str(line_total),
+                })
 
-    return render(request, 'core/cart.html', {
-        'cart': cart,
-        'items': items,
-        'items_view': items_view,
-        'currency': checkout['currency'],
-        'supported_currencies': SUPPORTED_CURRENCIES,
-        'payment_method': checkout['payment_method'],
-        'payment_methods': PAYMENT_METHODS,
-        'grand_total_display': _format_money(grand_total, checkout['currency']),
-        'rates_source': checkout['rates_source'],
-        'rates_updated': checkout['rates_updated'],
-        'rate_display': _format_money(checkout['rate'], checkout['currency']),
-    })
+        return render(request, 'core/cart.html', {
+            'cart': cart,
+            'items': items,
+            'items_view': items_view,
+            'currency': 'USD',
+            'supported_currencies': SUPPORTED_CURRENCIES,
+            'payment_method': 'mtn',
+            'payment_methods': PAYMENT_METHODS,
+            'grand_total_display': str(grand_total),
+            'rates_source': 'fallback',
+            'rates_updated': '',
+            'rate_display': '1.00',
+        })
 
 
 @require_POST
