@@ -2,8 +2,8 @@ services:
   - type: web
     name: east-africa-fashion
     runtime: python
-    buildCommand: pip install -r requirements.txt && python backend/manage.py collectstatic --noinput && python backend/manage.py migrate && python backend/manage.py flush --no-input && python backend/manage.py loaddata backend/fixtures/inventory_seed.json
-    startCommand: gunicorn --chdir backend core.wsgi:application --bind 0.0.0.0:$PORT
+    buildCommand: pip install -r requirements.txt && python backend/manage.py collectstatic --noinput
+    startCommand: python backend/manage.py migrate && python backend/manage.py seed_inventory_if_empty && gunicorn --chdir backend core.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: DJANGO_SECRET_KEY
         generateValue: true
