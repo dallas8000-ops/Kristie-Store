@@ -29,7 +29,8 @@
 	</form>
 
 	{% if items %}
-		<table class="table table-bordered align-middle bg-white">
+		<div class="table-responsive cart-table-wrap">
+		<table class="table table-bordered align-middle bg-white cart-table">
 			<thead>
 				<tr>
 					<th scope="col">Product</th>
@@ -45,13 +46,13 @@
 				{% for row in items_view %}
 				{% with item=row.item %}
 				<tr>
-					<td>{{ item.product.name }}</td>
+					<td class="cart-product-cell">{{ item.product.name }}</td>
 					<td>{{ item.size }}</td>
 					<td>{{ item.color }}</td>
 					<td>
-						<form method="post" action="{% url 'update_cart_item' item.id %}" style="display:inline;">
+						<form method="post" action="{% url 'update_cart_item' item.id %}" class="cart-quantity-form">
 							{% csrf_token %}
-							<input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control d-inline w-auto" style="width: 70px; display:inline-block;">
+							<input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control cart-quantity-input">
 							<button type="submit" class="btn btn-sm btn-primary ms-2">Update</button>
 						</form>
 					</td>
@@ -75,6 +76,7 @@
 				</tr>
 			</tfoot>
 		</table>
+		</div>
 		<div class="alert alert-secondary">
 			<strong>Order Info:</strong> Payment method selected: {{ payment_method|upper }}.
 		</div>

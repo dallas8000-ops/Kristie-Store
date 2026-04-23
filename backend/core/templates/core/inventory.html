@@ -30,9 +30,9 @@
 		{% for row in inventory_items %}
 		{% with product=row.product %}
 		<div class="col-md-6 col-lg-5 mb-5">
-			<div class="card shadow-sm p-3" style="border-radius: 18px;">
+			<div class="card shadow-sm p-3 inventory-card" style="border-radius: 18px;">
 				{% if product.images.all %}
-					<img src="{{ product.images.all.0.image.url }}" class="card-img-top" alt="{{ product.name }}" style="border-radius: 12px; max-height: 400px; object-fit: cover;">
+					<img src="{{ product.images.all.0.image.url }}" class="card-img-top inventory-card-image" alt="{{ product.name }}" style="border-radius: 12px; max-height: 400px; object-fit: cover;">
 				{% endif %}
 				<div class="card-body">
 					<h4 class="card-title">{{ product.name }}</h4>
@@ -45,19 +45,19 @@
 					<div class="mb-2">
 						<span class="fw-bold">Color:</span> {{ product.color }}
 					</div>
-					<form method="post" action="{% url 'add_to_cart' product.id %}">
+					<form method="post" action="{% url 'add_to_cart' product.id %}" class="inventory-purchase-form">
 						{% csrf_token %}
-						<div class="mb-2">
-							<span class="fw-bold">Size:</span>
-							<select name="size" class="form-select d-inline w-auto ms-2">
+						<div class="mb-2 inventory-control-group">
+							<label class="fw-bold inventory-inline-label" for="size-{{ product.id }}">Size:</label>
+							<select id="size-{{ product.id }}" name="size" class="form-select inventory-inline-select ms-2">
 								{% for size in product.size_list %}
 									<option value="{{ size }}">{{ size }}</option>
 								{% endfor %}
 							</select>
 						</div>
-						<div class="d-flex align-items-center mb-3">
-							<span class="fw-bold me-2">Quantity:</span>
-							<input type="number" name="quantity" value="1" min="1" class="form-control d-inline w-auto" style="width: 70px;">
+						<div class="d-flex align-items-center mb-3 inventory-control-group">
+							<label class="fw-bold me-2 inventory-inline-label" for="quantity-{{ product.id }}">Quantity:</label>
+							<input id="quantity-{{ product.id }}" type="number" name="quantity" value="1" min="1" class="form-control inventory-quantity-input">
 						</div>
 						<button type="submit" class="btn btn-lg w-100" style="background: #a31252; color: #fff; font-weight: 600;">Add to Cart</button>
 					</form>

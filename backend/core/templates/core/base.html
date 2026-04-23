@@ -24,7 +24,7 @@
                         <li class="nav-item"><a class="nav-link" href="/inventory/">Inventory</a></li>
                         <li class="nav-item"><a class="nav-link" href="/cart/">Cart</a></li>
                     </ul>
-                    <div class="d-flex gap-2 ms-lg-3 mt-3 mt-lg-0 align-items-center">
+                    <div class="nav-utility-group d-flex gap-2 ms-lg-3 mt-3 mt-lg-0 align-items-center flex-wrap">
                         {% if request.user.is_authenticated %}
                             <span class="small text-white-50 d-none d-lg-inline">Hi, {{ request.user.username }}</span>
                             <form method="post" action="{% url 'logout' %}" class="m-0">
@@ -41,7 +41,7 @@
                             <a class="btn btn-sm btn-outline-light" href="/admin/login/?next=/admin/">Admin Sign In</a>
                         {% endif %}
                         <button id="modeToggle" class="btn btn-sm btn-outline-light" type="button" aria-label="Toggle dark mode">Dark</button>
-                        <select id="themePicker" class="form-select form-select-sm" aria-label="Theme selection">
+                        <select id="themePicker" class="form-select form-select-sm theme-picker" aria-label="Theme selection">
                             <option value="ocean">Ocean</option>
                             <option value="cobalt">Cobalt</option>
                             <option value="mono">Mono</option>
