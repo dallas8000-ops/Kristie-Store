@@ -8,7 +8,7 @@ venv/
 
 # Django
 *.sqlite3
-media/
+# media/  # Temporarily enabled to deploy product images to Render
 
 # Node
 node_modules/
