@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: east-africa-fashion
+    name: kristie-store
     runtime: python
     buildCommand: pip install -r requirements.txt && python backend/manage.py collectstatic --noinput
     startCommand: python backend/manage.py migrate && python backend/manage.py seed_inventory_if_empty && gunicorn --chdir backend core.wsgi:application --bind 0.0.0.0:$PORT
