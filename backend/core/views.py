@@ -25,7 +25,7 @@ from pages.models import ContactInquiry
 
 SUPPORTED_IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
 SUPPORTED_CURRENCIES = ('USD', 'EUR', 'KES', 'UGX')
-PAYMENT_METHODS = ('mtn', 'airtel', 'pesapal')
+PAYMENT_METHODS = ('mtn', 'airtel', 'worldremit')
 FALLBACK_RATES = {
     'USD': Decimal('1'),
     'EUR': Decimal('0.92'),
@@ -311,8 +311,8 @@ def _payment_instructions(country, payment_method):
     if country_key == 'uganda':
         if payment_method == 'airtel':
             number_line = f'Number: {airtel_number} (Airtel)'
-        elif payment_method == 'pesapal':
-            number_line = 'Use your Pesapal checkout prompt to complete payment.'
+        elif payment_method == 'worldremit':
+            number_line = 'Use WorldRemit and send to the business mobile money details provided.'
         else:
             number_line = f'Number: {mtn_number} (MTN)'
 

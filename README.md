@@ -1,6 +1,6 @@
 # East Africa Ecommerce Platform
 
-A professional ecommerce platform for East Africa, focused on women’s clothing, accessories, jewelry, shoes, rings, perfume, and lingerie. Built with Django (backend), React + Bootstrap (frontend), and Node.js microservices for payment integrations (Pesapal, Daraja, Flutterwave, etc.).
+A professional ecommerce platform for East Africa, focused on women’s clothing, accessories, jewelry, shoes, rings, perfume, and lingerie. Built with Django (backend), React + Bootstrap (frontend), and Node.js microservices for payment integrations (WorldRemit, Daraja, Flutterwave, etc.).
 
 ## Capstone Alignment
 This project is being developed as a full-stack capstone application and is aligned to the following core capstone expectations:
@@ -44,7 +44,7 @@ East Africa Ecommerce Platform is a full-stack fashion marketplace built to help
 - Backend: Django, Django REST Framework, SQLite
 - Frontend UI: Django templates for the current shopping flow, React + Vite workspace for frontend expansion
 - Styling: Bootstrap 5 plus custom CSS
-- Payments: Node.js + Express microservice stubs for Pesapal, Daraja, Flutterwave, Airtel, and MTN expansion
+- Payments: Node.js + Express microservice stubs for WorldRemit, Daraja, Flutterwave, Airtel, and MTN expansion
 - Media/Data: SQLite database with admin-managed products and linked product images
 - Tooling: VS Code, GitHub Copilot, npm, Python virtual environment
 
@@ -56,7 +56,7 @@ East Africa Ecommerce Platform is a full-stack fashion marketplace built to help
 - Checkout order capture with country-aware payment instructions and order reference tracking
 - Shopper authentication (signup/login/logout) with account-aware cart merge
 - Contact inquiry workflow with admin persistence and real email notification support
-- Payment method selection and provider-ready scaffolding (MTN, Airtel, Pesapal)
+- Payment method selection and provider-ready scaffolding (MTN, Airtel, WorldRemit)
 - Designed for the East African market
 - Storefront-first landing page for capstone demo presentation
 
@@ -87,7 +87,7 @@ This pattern is common in production Django shops doing a gradual SSR-to-SPA mig
 
 ## Remaining Work To Fully Strengthen Capstone Submission
 1. Wire one payment provider sandbox end-to-end
-- Pesapal sandbox initiation path is the recommended next step (config scaffolding already in place)
+- WorldRemit confirmation workflow is the recommended next step (config scaffolding already in place)
 
 2. Final responsive QA
 - Verify mobile/tablet behavior for inventory, cart, catalog modal, and admin sign-in path
