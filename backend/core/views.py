@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import timedelta
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import json
 import urllib.request
@@ -13,6 +14,7 @@ from django.db.models import Prefetch
 from django.http import FileResponse, Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from cart.models import Cart, CartItem, Order, OrderItem
@@ -32,6 +34,9 @@ FALLBACK_RATES = {
 }
 
 
+STALE_EMPTY_CART_DAYS = 7
+
+
 def _workspace_images_dir():
     return Path(settings.BASE_DIR).parent / 'images'
 
@@ -42,7 +47,24 @@ def _ensure_session_key(request):
     return request.session.session_key
 
 
+def _cleanup_stale_empty_guest_carts(active_session_key=None):
+    cutoff = timezone.now() - timedelta(days=STALE_EMPTY_CART_DAYS)
+    stale_carts = Cart.objects.filter(
+        user__isnull=True,
+        created_at__lt=cutoff,
+        items__isnull=True,
+    )
+
+    if active_session_key:
+        stale_carts = stale_carts.exclude(session_key=active_session_key)
+
+    stale_carts.delete()
+
+
 def _current_cart(request, create=False):
+    active_session_key = request.session.session_key
+    _cleanup_stale_empty_guest_carts(active_session_key=active_session_key)
+
     if request.user.is_authenticated:
         if create:
             cart, _ = Cart.objects.get_or_create(

@@ -1,11 +1,13 @@
 from decimal import Decimal
+from datetime import timedelta
 
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from inventory.models import Category, Product
 
-from .models import CartItem, Order, OrderItem
+from .models import Cart, CartItem, Order, OrderItem
 
 
 class CartFlowSmokeTests(TestCase):
@@ -67,3 +69,15 @@ class CartFlowSmokeTests(TestCase):
 		self.assertEqual(Order.objects.count(), 1)
 		self.assertEqual(OrderItem.objects.count(), 1)
 		self.assertEqual(CartItem.objects.count(), 0)
+
+	def test_cart_view_cleans_stale_empty_guest_carts(self):
+		stale = Cart.objects.create(user=None, session_key='old-empty')
+		Cart.objects.filter(id=stale.id).update(created_at=timezone.now() - timedelta(days=8))
+
+		active = Cart.objects.create(user=None, session_key='active-cart')
+		CartItem.objects.create(cart=active, product=self.product, quantity=1, size='34', color='Black')
+
+		response = self.client.get(reverse('cart'))
+		self.assertEqual(response.status_code, 200)
+		self.assertFalse(Cart.objects.filter(id=stale.id).exists())
+		self.assertTrue(Cart.objects.filter(id=active.id).exists())
