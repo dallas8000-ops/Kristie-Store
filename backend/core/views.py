@@ -333,6 +333,10 @@ def _payment_instructions(country, payment_method):
     )
 
 
+def health(request):
+    return render(request, 'core/health.html', status=200)
+
+
 def home(request):
     if request.method == 'POST':
         contact_form = ContactInquiryForm(request.POST)
