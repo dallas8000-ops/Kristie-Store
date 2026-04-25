@@ -337,11 +337,7 @@ def _payment_instructions(country, payment_method):
     )
 
 
-def health(request):
-    return render(request, 'core/health.html', status=200)
-
-
-def home(request):
+def _handle_contact_inquiry(request):
     if request.method == 'POST':
         contact_form = ContactInquiryForm(request.POST)
         if contact_form.is_valid():
@@ -365,11 +361,19 @@ def home(request):
                     request,
                     'Inquiry saved, but email delivery failed. Please verify SMTP settings in production.'
                 )
-            return redirect('home')
-        messages.error(request, 'Please correct the highlighted fields and try again.')
-    else:
-        contact_form = ContactInquiryForm()
+            return contact_form, True
 
+        messages.error(request, 'Please correct the highlighted fields and try again.')
+        return contact_form, False
+
+    return ContactInquiryForm(), False
+
+
+def health(request):
+    return render(request, 'core/health.html', status=200)
+
+
+def home(request):
     hero_images = _recent_images(limit=3)
     featured_products = _featured_products(limit=3)
     category_count = Product.objects.values('category').distinct().count()
@@ -378,9 +382,18 @@ def home(request):
     return render(request, 'core/index.html', {
         'hero_images': hero_images,
         'featured_products': featured_products,
-        'contact_form': contact_form,
         'product_count': product_count,
         'category_count': category_count,
+    })
+
+
+def contact(request):
+    contact_form, sent = _handle_contact_inquiry(request)
+    if sent:
+        return redirect('contact')
+
+    return render(request, 'core/contact.html', {
+        'contact_form': contact_form,
     })
 
 

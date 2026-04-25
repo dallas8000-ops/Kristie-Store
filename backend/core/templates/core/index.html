@@ -105,63 +105,26 @@
   </section>
 
   <section class="row g-3 align-items-stretch float-in delay-2 mb-4">
-    <div class="col-lg-5">
+    <div class="col-lg-6">
       <article class="contact-card h-100 storefront-contact-info">
-        <p class="section-kicker mb-1">Store contact</p>
-        <h2 class="h3 page-title">Text Kristie Store for purchases</h2>
-        <p class="text-muted">For purchases, delivery questions, and quick availability checks, message the store directly on WhatsApp. Use the form for bulk orders and business inquiries.</p>
-        <div class="contact-detail-list">
-          <div>
-            <strong>WhatsApp</strong>
-            <span><a href="https://wa.me/256704757198" target="_blank" rel="noopener">+256 704 757198</a></span>
-          </div>
-          <div>
-            <strong>Phone</strong>
-            <span>+256 704 757198</span>
-          </div>
-          <div>
-            <strong>Location</strong>
-            <span>Kampala, Uganda</span>
-          </div>
-          <div>
-            <strong>Shipping</strong>
-            <span>Worldwide delivery available</span>
-          </div>
+        <p class="section-kicker mb-1">Need more details?</p>
+        <h2 class="h3 page-title">Contact the store on its own page</h2>
+        <p class="text-muted">Keep the home page focused on shopping. Use the contact page for inquiries, delivery questions, and business requests.</p>
+        <div class="d-flex gap-2 flex-wrap mt-3">
+          <a class="btn btn-primary px-4" href="/contact/">Open Contact Page</a>
+          <a class="btn btn-outline-secondary px-4" href="https://wa.me/256704757198" target="_blank" rel="noopener">Message on WhatsApp</a>
         </div>
       </article>
     </div>
-    <div class="col-lg-7">
-      <article class="contact-card h-100">
-        <h2 class="h4 page-title mb-3">Send a store inquiry</h2>
-        <form method="post" novalidate>
-          {% csrf_token %}
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label for="id_name" class="form-label">Name</label>
-              <input type="text" name="name" id="id_name" class="form-control{% if contact_form.name.errors %} is-invalid{% endif %}" value="{{ contact_form.name.value|default:'' }}">
-              {% for error in contact_form.name.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
-            </div>
-            <div class="col-md-6">
-              <label for="id_email" class="form-label">Email</label>
-              <input type="email" name="email" id="id_email" class="form-control{% if contact_form.email.errors %} is-invalid{% endif %}" value="{{ contact_form.email.value|default:'' }}">
-              {% for error in contact_form.email.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
-            </div>
-            <div class="col-12">
-              <label for="id_subject" class="form-label">Subject</label>
-              <input type="text" name="subject" id="id_subject" class="form-control{% if contact_form.subject.errors %} is-invalid{% endif %}" value="{{ contact_form.subject.value|default:'' }}">
-              {% for error in contact_form.subject.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
-            </div>
-            <div class="col-12">
-              <label for="id_message" class="form-label">Message</label>
-              <textarea name="message" id="id_message" rows="5" class="form-control{% if contact_form.message.errors %} is-invalid{% endif %}">{{ contact_form.message.value|default:'' }}</textarea>
-              {% for error in contact_form.message.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
-            </div>
-          </div>
-          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
-            <p class="text-muted small mb-0">Messages are saved for follow-up, while purchase requests can also be handled directly on WhatsApp.</p>
-            <button type="submit" class="btn btn-primary px-4">Send Store Inquiry</button>
-          </div>
-        </form>
+    <div class="col-lg-6">
+      <article class="service-card h-100">
+        <p class="section-kicker mb-1">Store details</p>
+        <h2 class="h3 page-title">Read the brand story on About</h2>
+        <p class="text-muted">The About page now carries the location, shipping details, and store background so the home page stays tighter and easier to scan.</p>
+        <div class="d-flex gap-2 flex-wrap mt-3">
+          <a class="btn btn-dark-subtle border px-4" href="/about/">Go to About</a>
+          <a class="btn btn-outline-secondary px-4" href="/catalog/">Browse Catalog</a>
+        </div>
       </article>
     </div>
   </section>

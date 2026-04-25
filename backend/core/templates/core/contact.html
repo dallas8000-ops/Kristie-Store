@@ -1,0 +1,72 @@
+{% extends 'core/base.html' %}
+{% block title %}Contact | Kristie Store{% endblock %}
+{% block content %}
+<div class="page-panel float-in">
+  <section class="mb-4">
+    <h1 class="page-title mb-2">Contact Kristie Store</h1>
+    <p class="text-muted mb-0">Use this page for store inquiries, delivery questions, bulk requests, and business follow-up. For fast purchase confirmation, WhatsApp is still the quickest route.</p>
+  </section>
+
+  <section class="row g-3 align-items-stretch">
+    <div class="col-lg-5">
+      <article class="contact-card h-100 storefront-contact-info">
+        <p class="section-kicker mb-1">Direct store contact</p>
+        <h2 class="h3 page-title">Talk to the store team</h2>
+        <p class="text-muted">Reach out directly for product availability, delivery timing, collaboration requests, or wholesale interest.</p>
+        <div class="contact-detail-list">
+          <div>
+            <strong>WhatsApp</strong>
+            <span><a href="https://wa.me/256704757198" target="_blank" rel="noopener">+256 704 757198</a></span>
+          </div>
+          <div>
+            <strong>Phone</strong>
+            <span>+256 704 757198</span>
+          </div>
+          <div>
+            <strong>Location</strong>
+            <span>Kampala, Uganda</span>
+          </div>
+          <div>
+            <strong>Shipping</strong>
+            <span>Worldwide delivery available</span>
+          </div>
+        </div>
+      </article>
+    </div>
+    <div class="col-lg-7">
+      <article class="contact-card h-100">
+        <h2 class="h4 page-title mb-3">Send a store inquiry</h2>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="id_name" class="form-label">Name</label>
+              <input type="text" name="name" id="id_name" class="form-control{% if contact_form.name.errors %} is-invalid{% endif %}" value="{{ contact_form.name.value|default:'' }}">
+              {% for error in contact_form.name.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label for="id_email" class="form-label">Email</label>
+              <input type="email" name="email" id="id_email" class="form-control{% if contact_form.email.errors %} is-invalid{% endif %}" value="{{ contact_form.email.value|default:'' }}">
+              {% for error in contact_form.email.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-12">
+              <label for="id_subject" class="form-label">Subject</label>
+              <input type="text" name="subject" id="id_subject" class="form-control{% if contact_form.subject.errors %} is-invalid{% endif %}" value="{{ contact_form.subject.value|default:'' }}">
+              {% for error in contact_form.subject.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-12">
+              <label for="id_message" class="form-label">Message</label>
+              <textarea name="message" id="id_message" rows="5" class="form-control{% if contact_form.message.errors %} is-invalid{% endif %}">{{ contact_form.message.value|default:'' }}</textarea>
+              {% for error in contact_form.message.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+            <p class="text-muted small mb-0">Messages are saved for follow-up, and purchase requests can still be confirmed quickly on WhatsApp.</p>
+            <button type="submit" class="btn btn-primary px-4">Send Store Inquiry</button>
+          </div>
+        </form>
+      </article>
+    </div>
+  </section>
+</div>
+{% endblock %}
