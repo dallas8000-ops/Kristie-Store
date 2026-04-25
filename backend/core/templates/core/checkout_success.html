@@ -6,7 +6,8 @@
         <div class="card-body p-4 p-md-5">
             <h1 class="h3 mb-3">Order Received</h1>
             <p class="mb-1"><strong>Order Reference:</strong> {{ order.order_ref }}</p>
-            <p class="mb-1"><strong>Status:</strong> Pending payment</p>
+            <p class="mb-1"><strong>Status:</strong> {{ order.get_status_display }}</p>
+            <p class="mb-2 text-muted small">New orders stay pending until staff verifies payment in Django admin and sets status to Payment confirmed.</p>
             <p class="mb-4"><strong>Total:</strong> {{ currency }} {{ grand_total_display }}</p>
 
             <div class="p-3 bg-light rounded border mb-4" style="white-space: pre-line;">{{ instructions }}</div>
