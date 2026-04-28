@@ -2,6 +2,7 @@
 
 from django.contrib import admin
 from .models import Category, Product, ProductImage
+from .pricing import apply_price_suggestion, suggest_price_for_product
 
 
 def _generated_catalog_description(product):
@@ -93,11 +94,23 @@ class ProductImageInline(admin.TabularInline):
 	extra = 1
 
 class ProductAdmin(admin.ModelAdmin):
-	list_display = ('name', 'category', 'price', 'in_stock')
+	list_display = ('name', 'category', 'price_usd', 'price_ugx', 'stock_quantity', 'in_stock')
 	list_filter = ('category', 'in_stock')
 	search_fields = ('name', 'description')
+	fieldsets = (
+		('Product Information', {
+			'fields': ('name', 'category', 'description', 'color', 'stock_quantity', 'in_stock')
+		}),
+		('Pricing', {
+			'fields': ('price_usd', 'price_ugx', 'old_price'),
+			'description': 'Set prices in USD and UGX (Ugandan Shilling)'
+		}),
+		('Sizes', {
+			'fields': ('sizes',)
+		}),
+	)
 	inlines = [ProductImageInline]
-	actions = ['generate_catalog_descriptions']
+	actions = ['generate_catalog_descriptions', 'scan_and_apply_price_suggestions']
 
 	@admin.action(description='Generate catalog descriptions (for blank/auto-created only)')
 	def generate_catalog_descriptions(self, request, queryset):
@@ -114,6 +127,36 @@ class ProductAdmin(admin.ModelAdmin):
 			self.message_user(request, 'No products were updated. Selected products already have custom descriptions.')
 		else:
 			self.message_user(request, f'Generated descriptions for {updated} product(s).')
+
+	@admin.action(description='Scan web comparables and apply suggested prices')
+	def scan_and_apply_price_suggestions(self, request, queryset):
+		updated = 0
+		skipped = 0
+
+		for product in queryset.select_related('category'):
+			suggestion = suggest_price_for_product(product)
+
+			if suggestion.price_usd is None:
+				skipped += 1
+				continue
+
+			if suggestion.confidence < 0.45:
+				skipped += 1
+				continue
+
+			if apply_price_suggestion(product, suggestion):
+				updated += 1
+
+		if updated == 0:
+			self.message_user(
+				request,
+				f'No prices updated. {skipped} product(s) skipped due to low confidence or missing comparable data.'
+			)
+		else:
+			self.message_user(
+				request,
+				f'Updated prices for {updated} product(s). Skipped {skipped} product(s).'
+			)
 
 admin.site.register(Category)
 admin.site.register(Product, ProductAdmin)

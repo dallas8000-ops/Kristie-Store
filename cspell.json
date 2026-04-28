@@ -8,6 +8,10 @@
     "Flutterwave",
     "Gilliom",
     "Wimauma",
-    "Nalumansi"
+    "Nalumansi",
+    "Airtel",
+    "viewsets",
+    "runserver",
+    "createsuperuser"
   ]
 }

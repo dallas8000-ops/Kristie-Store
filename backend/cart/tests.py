@@ -16,10 +16,12 @@ class CartFlowSmokeTests(TestCase):
 		self.product = Product.objects.create(
 			name='Runner',
 			description='Lightweight running shoe',
-			price=Decimal('49.99'),
+			price_usd=Decimal('49.99'),
+			price_ugx=Decimal('184963.00'),
 			category=category,
 			color='Black',
 			sizes='32,34,36',
+			stock_quantity=5,
 			in_stock=True,
 		)
 
@@ -69,6 +71,35 @@ class CartFlowSmokeTests(TestCase):
 		self.assertEqual(Order.objects.count(), 1)
 		self.assertEqual(OrderItem.objects.count(), 1)
 		self.assertEqual(CartItem.objects.count(), 0)
+		self.product.refresh_from_db()
+		self.assertEqual(self.product.stock_quantity, 3)
+
+	def test_add_to_cart_rejects_quantity_above_stock(self):
+		response = self.client.post(
+			reverse('add_to_cart', args=[self.product.id]),
+			data={'quantity': 99, 'size': '34'},
+		)
+
+		self.assertEqual(response.status_code, 302)
+		self.assertEqual(response.url, reverse('inventory'))
+		self.assertEqual(CartItem.objects.count(), 0)
+
+	def test_update_cart_item_rejects_quantity_above_stock(self):
+		self.client.post(
+			reverse('add_to_cart', args=[self.product.id]),
+			data={'quantity': 1, 'size': '34'},
+		)
+
+		item = CartItem.objects.get()
+		response = self.client.post(
+			reverse('update_cart_item', args=[item.id]),
+			data={'quantity': 10},
+		)
+
+		self.assertEqual(response.status_code, 302)
+		self.assertEqual(response.url, reverse('cart'))
+		item.refresh_from_db()
+		self.assertEqual(item.quantity, 1)
 
 	def test_cart_view_cleans_stale_empty_guest_carts(self):
 		stale = Cart.objects.create(user=None, session_key='old-empty')

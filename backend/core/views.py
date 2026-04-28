@@ -307,7 +307,7 @@ def _checkout_preferences(request):
 
 def _payment_instructions(country, payment_method):
     country_key = (country or '').strip().lower()
-    business_name = 'Kristie Store'
+    business_name = 'Kistie_Store'
     mtn_number = '+256XXXXXXXXX'
     airtel_number = '+256XXXXXXXXX'
 
@@ -563,7 +563,12 @@ def inventory(request):
 def add_to_cart(request, product_id):
     product = Product.objects.get(id=product_id)
     size = request.POST.get('size', '')
-    quantity = int(request.POST.get('quantity', 1))
+    try:
+        quantity = int(request.POST.get('quantity', 1))
+    except (TypeError, ValueError):
+        quantity = 1
+
+    quantity = max(1, quantity)
     color = product.color
     available_sizes = product.size_list()
 
@@ -571,13 +576,21 @@ def add_to_cart(request, product_id):
         messages.error(request, 'Please choose one of the listed EU sizes before adding this item to cart.')
         return redirect('inventory')
 
-    cart = _current_cart(request, create=True)
-    item, created = CartItem.objects.get_or_create(cart=cart, product=product, size=size, color=color)
+    if not product.in_stock or product.stock_quantity == 0:
+        messages.error(request, 'This item is currently out of stock.')
+        return redirect('inventory')
 
-    if not created:
+    cart = _current_cart(request, create=True)
+    item = CartItem.objects.filter(cart=cart, product=product, size=size, color=color).first()
+    requested_quantity = quantity if item is None else item.quantity + quantity
+    if requested_quantity > product.stock_quantity:
+        messages.error(request, f'Only {product.stock_quantity} unit(s) available for {product.name}.')
+        return redirect('inventory')
+
+    if item is not None:
         item.quantity += quantity
     else:
-        item.quantity = quantity
+        item = CartItem(cart=cart, product=product, size=size, color=color, quantity=quantity)
 
     item.save()
     return HttpResponseRedirect(reverse('cart'))
@@ -654,17 +667,20 @@ def cart(request):
         })
 
 
-def checkout(request):
-    cart = _current_cart(request, create=False)
-    if not cart or not cart.items.exists():
-        messages.info(request, 'Your cart is empty. Add items before checkout.')
-        return redirect('cart')
+def _validate_cart_stock(cart_items):
+    for item in cart_items:
+        product = item.product
+        if not product.in_stock or product.stock_quantity == 0:
+            return f'{product.name} is out of stock. Please update your cart.'
+        if item.quantity > product.stock_quantity:
+            return f'{product.name} has only {product.stock_quantity} unit(s) available.'
+    return ''
 
-    checkout_prefs = _checkout_preferences(request)
-    cart_items = list(cart.items.select_related('product'))
 
+def _build_checkout_items_view(cart_items, checkout_prefs):
     items_view = []
     grand_total = Decimal('0')
+
     for item in cart_items:
         base_price = _safe_decimal(item.product.price, Decimal('0'))
         unit_price = base_price * checkout_prefs['rate']
@@ -678,6 +694,62 @@ def checkout(request):
             'unit_price_display': _format_money(unit_price, checkout_prefs['currency']),
             'line_total_display': _format_money(line_total, checkout_prefs['currency']),
         })
+
+    return items_view, grand_total
+
+
+def _lock_products_for_cart(cart_items):
+    product_ids = [item.product_id for item in cart_items]
+    locked_products = Product.objects.select_for_update().filter(id__in=product_ids)
+    return {product.id: product for product in locked_products}
+
+
+def _validate_locked_stock(cart_items, product_map):
+    for item in cart_items:
+        product = product_map.get(item.product_id)
+        if product is None or not product.in_stock or product.stock_quantity == 0:
+            return f'{item.product.name} is now out of stock. Please review your cart.'
+        if item.quantity > product.stock_quantity:
+            return f'{item.product.name} now has only {product.stock_quantity} unit(s) left.'
+    return ''
+
+
+def _create_order_items_and_reduce_stock(order, cart_items, checkout_prefs, product_map):
+    for item in cart_items:
+        unit_price = (_safe_decimal(item.product.price, Decimal('0')) * checkout_prefs['rate']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        line_total = (unit_price * item.quantity).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        OrderItem.objects.create(
+            order=order,
+            product_name=item.product.name,
+            quantity=item.quantity,
+            size=item.size,
+            color=item.color,
+            unit_price=unit_price,
+            line_total=line_total,
+        )
+
+        product = product_map[item.product_id]
+        product.stock_quantity -= item.quantity
+        if product.stock_quantity == 0:
+            product.in_stock = False
+        product.save(update_fields=['stock_quantity', 'in_stock', 'updated_at'])
+
+
+def checkout(request):
+    cart = _current_cart(request, create=False)
+    if not cart or not cart.items.exists():
+        messages.info(request, 'Your cart is empty. Add items before checkout.')
+        return redirect('cart')
+
+    checkout_prefs = _checkout_preferences(request)
+    cart_items = list(cart.items.select_related('product'))
+
+    stock_error = _validate_cart_stock(cart_items)
+    if stock_error:
+        messages.error(request, stock_error)
+        return redirect('cart')
+
+    items_view, grand_total = _build_checkout_items_view(cart_items, checkout_prefs)
 
     context = {
         'items_view': items_view,
@@ -706,6 +778,12 @@ def checkout(request):
             return render(request, 'core/checkout.html', context)
 
         with transaction.atomic():
+            product_map = _lock_products_for_cart(cart_items)
+            locked_stock_error = _validate_locked_stock(cart_items, product_map)
+            if locked_stock_error:
+                messages.error(request, locked_stock_error)
+                return redirect('cart')
+
             order = Order.objects.create(
                 user=request.user if request.user.is_authenticated else None,
                 session_key=request.session.session_key,
@@ -718,18 +796,7 @@ def checkout(request):
                 total_amount=grand_total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
             )
 
-            for item in cart_items:
-                unit_price = (_safe_decimal(item.product.price, Decimal('0')) * checkout_prefs['rate']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-                line_total = (unit_price * item.quantity).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-                OrderItem.objects.create(
-                    order=order,
-                    product_name=item.product.name,
-                    quantity=item.quantity,
-                    size=item.size,
-                    color=item.color,
-                    unit_price=unit_price,
-                    line_total=line_total,
-                )
+            _create_order_items_and_reduce_stock(order, cart_items, checkout_prefs, product_map)
 
             # Clear the cart after a successful order capture.
             cart.items.all().delete()
@@ -752,8 +819,15 @@ def update_cart_item(request, item_id):
         return redirect('cart')
 
     item = get_object_or_404(CartItem, id=item_id, cart=cart)
-    quantity = int(request.POST.get('quantity', 1))
+    try:
+        quantity = int(request.POST.get('quantity', 1))
+    except (TypeError, ValueError):
+        quantity = 1
+
     if quantity > 0:
+        if quantity > item.product.stock_quantity:
+            messages.error(request, f'Only {item.product.stock_quantity} unit(s) available for {item.product.name}.')
+            return redirect('cart')
         item.quantity = quantity
         item.save()
     else:

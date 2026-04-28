@@ -77,6 +77,9 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False').lower() in ('1', 'true', 'yes', 'on')
 DEFAULT_FROM_EMAIL = os.environ.get('DJANGO_DEFAULT_FROM_EMAIL', 'noreply@eastafricafashion.local')
 CONTACT_RECIPIENT_EMAIL = os.environ.get('CONTACT_RECIPIENT_EMAIL', 'dallas8000@gmail.com')
+SERPAPI_API_KEY = os.environ.get('SERPAPI_API_KEY', '').strip()
+PRICE_SCAN_UGX_RATE = os.environ.get('PRICE_SCAN_UGX_RATE', '3700').strip()
+PRICE_SCAN_SITE_BASE_URL = os.environ.get('PRICE_SCAN_SITE_BASE_URL', '').strip()
 
 
 # Application definition

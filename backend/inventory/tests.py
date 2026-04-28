@@ -13,7 +13,8 @@ class InventoryApiSmokeTests(APITestCase):
 		Product.objects.create(
 			name='Classic Tee',
 			description='Cotton t-shirt',
-			price=Decimal('19.99'),
+			price_usd=Decimal('19.99'),
+			price_ugx=Decimal('73963.00'),
 			category=self.category,
 			in_stock=True,
 		)
@@ -32,7 +33,8 @@ class InventoryApiSmokeTests(APITestCase):
 		product = Product(
 			name='Tailored Dress',
 			description='Structured silhouette',
-			price=Decimal('39.99'),
+			price_usd=Decimal('39.99'),
+			price_ugx=Decimal('147963.00'),
 			category=self.category,
 			sizes='32, 38, EU 44, 54',
 		)
@@ -45,7 +47,8 @@ class InventoryApiSmokeTests(APITestCase):
 		product = Product(
 			name='Tailored Dress',
 			description='Structured silhouette',
-			price=Decimal('39.99'),
+			price_usd=Decimal('39.99'),
+			price_ugx=Decimal('147963.00'),
 			category=self.category,
 			sizes='S,M,L',
 		)

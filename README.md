@@ -2,7 +2,7 @@
 
 A professional ecommerce platform for East Africa, focused on women’s clothing, accessories, jewelry, shoes, rings, perfume, and lingerie. Built with Django (backend), React + Bootstrap (frontend), and Node.js microservices for payment integrations (WorldRemit, Daraja, Flutterwave, etc.).
 
-**GitHub repository:** https://github.com/dallas8000-ops/Kristie-Store
+**GitHub repository:** https://github.com/dallas8000-ops/Kistie-Store
 
 ## Capstone Alignment
 This project is being developed as a full-stack capstone application and is aligned to the following core capstone expectations:
@@ -73,7 +73,7 @@ East Africa Ecommerce Platform is a full-stack fashion marketplace built to help
 - Storefront-first landing page for capstone demo presentation
 
 ## Live Demo
-- Deployed URL: https://e-commerce-9kru.onrender.com
+- Deployed URL: https://kristie-store.onrender.com
 - Django admin on production: **disabled** by default (`DJANGO_ENABLE_ADMIN=False` in `render.yaml`) so the public site does not expose `/admin/`. To manage inventory on Render, temporarily set `DJANGO_ENABLE_ADMIN=true` in the Render dashboard, redeploy, use admin, then turn it off again—or run inventory changes locally and push data via fixtures/migrations as you prefer.
 - Local admin: `http://127.0.0.1:8000/admin/` after `python manage.py createsuperuser`
 
@@ -90,8 +90,8 @@ This pattern is common in production Django shops doing a gradual SSR-to-SPA mig
 - Codebase: present in this repository
 - Project documentation: core capstone sections in this README (optional Google Doc per instructor)
 - Planning document and Trello-ready task breakdown: see `PROJECT_PLANNING.md`
-- GitHub repository: https://github.com/dallas8000-ops/Kristie-Store
-- Trello board link: https://trello.com/b/s8Rpm9in/kristie-store
+- GitHub repository: https://github.com/dallas8000-ops/Kistie-Store
+- Trello board link: https://trello.com/b/s8Rpm9in/kistie-store
 - Industry context and target audience: documented above
 - Elevator pitch: documented above
 - List of pages and features: documented above

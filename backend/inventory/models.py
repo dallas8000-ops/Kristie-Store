@@ -45,10 +45,12 @@ class Category(models.Model):
 class Product(models.Model):
 	name = models.CharField(max_length=200)
 	description = models.TextField(blank=True)
-	price = models.DecimalField(max_digits=10, decimal_places=2)
+	price_usd = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text='Price in USD')
+	price_ugx = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text='Price in UGX (Ugandan Shilling)')
 	old_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 	category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
 	color = models.CharField(max_length=100, blank=True)
+	stock_quantity = models.PositiveIntegerField(default=1, help_text='Number of units currently available for sale')
 	sizes = models.CharField(
 		max_length=200,
 		help_text='Comma-separated EU sizes, e.g. 32,34,36,38,40,42,44,46,48,50,52,54',
@@ -59,6 +61,11 @@ class Product(models.Model):
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
 
+	@property
+	def price(self):
+		"""For backward compatibility, returns USD price"""
+		return self.price_usd
+
 	def size_list(self):
 		return normalize_eu_sizes(self.sizes)
 
@@ -66,6 +73,9 @@ class Product(models.Model):
 		super().clean()
 		if self.sizes:
 			self.sizes = ','.join(normalize_eu_sizes(self.sizes))
+
+		if self.stock_quantity == 0:
+			self.in_stock = False
 
 	def __str__(self):
 		return self.name
